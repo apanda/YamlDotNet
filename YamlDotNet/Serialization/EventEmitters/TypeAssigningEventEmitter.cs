@@ -22,12 +22,20 @@
 using System;
 using System.Globalization;
 using YamlDotNet.Core;
+using System.Collections.Generic;
 
 namespace YamlDotNet.Serialization.EventEmitters
 {
 	public sealed class TypeAssigningEventEmitter : ChainedEventEmitter
 	{
 		private readonly bool _assignTypeWhenDifferent;
+
+        private static Dictionary<Type, string> tags = new Dictionary<Type,string>();
+
+        public static void AddTypeMapping(Type type, string tag)
+        {
+            tags[type] = tag;
+        }
 
 		public TypeAssigningEventEmitter(IEventEmitter nextEmitter, bool assignTypeWhenDifferent)
 			: base(nextEmitter)
@@ -121,7 +129,11 @@ namespace YamlDotNet.Serialization.EventEmitters
 		{
 			if (_assignTypeWhenDifferent && eventInfo.Source.Value != null)
 			{
-				if (eventInfo.Source.Type != eventInfo.Source.StaticType)
+                if (tags.ContainsKey(eventInfo.Source.Type))
+                {
+                    eventInfo.Tag = tags[eventInfo.Source.Type];
+                }
+				else if (eventInfo.Source.Type != eventInfo.Source.StaticType)
 				{
 					eventInfo.Tag = "!" + eventInfo.Source.Type.AssemblyQualifiedName;
 				}
